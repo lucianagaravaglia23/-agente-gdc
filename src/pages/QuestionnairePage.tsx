@@ -67,15 +67,19 @@ export function QuestionnairePage() {
     navigate(`/proyectos/${id}/resultado`);
   };
 
-  const handleSendChat = (question: QuestionnaireQuestion) => {
+const handleSendChat = async (question: QuestionnaireQuestion) => {
     const mensaje = chatDraft.trim();
     if (!mensaje) return;
-    const reply = getQuestionAssistantReply(question.texto, mensaje);
+    setChatDraft('');
     setChatByQuestion((prev) => ({
       ...prev,
-      [question.id]: [...(prev[question.id] ?? []), { role: 'user', texto: mensaje }, { role: 'assistant', texto: reply }],
+      [question.id]: [...(prev[question.id] ?? []), { role: 'user', texto: mensaje }],
     }));
-    setChatDraft('');
+    const reply = await getQuestionAssistantReply(question.texto, mensaje);
+    setChatByQuestion((prev) => ({
+      ...prev,
+      [question.id]: [...(prev[question.id] ?? []), { role: 'assistant', texto: reply }],
+    }));
   };
 
   const handleEscalate = (question: QuestionnaireQuestion) => {
@@ -162,7 +166,7 @@ export function QuestionnairePage() {
               chat={chatByQuestion[question.id] ?? []}
               chatDraft={chatDraft}
               onChatDraftChange={setChatDraft}
-              onSendChat={() => handleSendChat(question)}
+              onSendChat={() => void handleSendChat(question)}
               escalateOpen={escalateOpenId === question.id}
               onToggleEscalate={() => setEscalateOpenId((v) => (v === question.id ? null : question.id))}
               escalateDraft={escalateDraft}
